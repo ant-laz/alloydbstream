@@ -38,6 +38,11 @@ FROM
   sensors;
 ```
 
+| sensorid | state  | measurement |
+|----------|--------|-------------|
+| 1        | ACTIVE | 123         |
+| 2        | ACTIVE | 456         |
+
 manually execute an upsert
 ```shell
  INSERT INTO sensors (sensorid, state, measurement) 
@@ -45,6 +50,23 @@ manually execute an upsert
  ON CONFLICT (sensorid) 
  DO UPDATE SET state = EXCLUDED.state, measurement = EXCLUDED.measurement;
 ```
+
+query the table again
+```shell
+SELECT
+  sensorid,
+  state,
+  measurement
+FROM
+  sensors;
+```
+
+| sensorid | state  | measurement |
+|----------|--------|-------------|
+| 1        | ERROR  | 789         |
+| 2        | ACTIVE | 456         |
+
+
 
 ## Dataflow pipeline
 
