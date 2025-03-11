@@ -1,19 +1,47 @@
 plugins {
-    id 'java'
+    // the application plugin ...
+    id 'application'
 }
 
-group 'org.tonyzaro'
-version '1.0-SNAPSHOT'
+application {
+    mainClass = 'org.tonyzaro.pipeline.ADBPipeline'
+}
+
+test {
+    // JUnit 4.
+    useJUnit()
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation "org.apache.beam:beam-sdks-java-core:2.59.0"
+    implementation "org.apache.beam:beam-runners-direct-java:2.59.0"
+    implementation "org.apache.beam:beam-runners-google-cloud-dataflow-java:2.59.0"
+    implementation "org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.59.0"
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
+    implementation "org.slf4j:slf4j-jdk14:1.7.32"
+
+    // Tests dependencies.
+    testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.hamcrest:hamcrest:2.2'
 }
 
-test {
-    useJUnitPlatform()
+// Package a self-contained jar file.
+jar {
+    archiveBaseName = 'pipeline'
+    destinationDirectory = file('build')
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    manifest {
+        attributes 'Main-Class': 'org.tonyzaro.pipeline.ADBPipeline'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
+

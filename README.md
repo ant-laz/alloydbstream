@@ -76,4 +76,26 @@ create environment variables
 source my_config/create_env_vars.sh
 ```
 
+navigate to Apache Beam IO
+
+https://beam.apache.org/documentation/io/connectors/
+
+find latest docs for JdbcIO
+
+https://beam.apache.org/releases/javadoc/current/org/apache/beam/sdk/io/jdbc/JdbcIO.html
+
+launch dataflow pipeline
+
+```shell
+./gradlew run --args="\
+--runner='DataflowRunner' \
+--project=${GCP_PROJECT_ID} \
+--serviceAccount=${SERVICE_ACCT} \
+--region=${GCP_DATAFLOW_REGION} \
+--tempLocation=${GCS_BUCKET_TMP} \
+--network=${NETWORK_NAME} \
+--subnetwork=${SUBNETWORK_NAME} \
+--usePublicIps=${PUBLICIP_FLAG} \
+--targetDatabase${}
+```
 
