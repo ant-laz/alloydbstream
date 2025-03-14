@@ -13,7 +13,9 @@
 //  limitations under the License.
 
 package org.tonyzaro.pipeline;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.arrow.flatbuf.Null;
 import org.apache.beam.sdk.Pipeline;
@@ -47,6 +49,21 @@ public class ADBPipeline {
     void setDatabase(String value);
   }
 
+  // ---------   DoFn ------------------------------------------------------------------------------
+  static class CalcLineLength extends DoFn<String, Integer> {
+
+    @ProcessElement
+    public void processElement(@Element String msg, OutputReceiver<Integer> out) {
+      // Dummy DoFn to test setup of Dataflow
+
+      // Simply return length of string in input PCollection
+      out.output(msg.length());
+
+      // And output input string to log so we can check everything is set up correct
+      LOG.info(msg);
+    }
+  }
+
   public static void main(String[] args) {
     // step 1 of X : Initialize the pipeline options
     PipelineOptionsFactory.register(MyPipelineOptions.class);
@@ -59,15 +76,19 @@ public class ADBPipeline {
     // step 2 of X : create the main pipeline
     Pipeline pipeline = Pipeline.create(myOptions);
 
-    Map<Integer, String> map = new HashMap<>();
-    map.put(1, "ERROR");
-    map.put(2, "SLEEP");
+    // step 3 of X : create an in memory PCollection
+    final List<String> LINES = Arrays.asList(
+        "To be, or not to be: that is the question: ",
+        "Whether 'tis nobler in the mind to suffer ",
+        "The slings and arrows of outrageous fortune, ",
+        "Or to take arms against a sea of troubles, ");
+    PCollection<String> lines = pipeline.apply(Create.of(LINES)).setCoder(StringUtf8Coder.of());
 
-    PCollection<KV<Integer, String>> dummyrecords =
-        pipeline.apply(
-            Create.of(map).withCoder(KvCoder.of(BigEndianIntegerCoder.of(), StringUtf8Coder.of())));
+    // step 4 of X : compute line length & output to logs
+    PCollection<Integer> lengths = lines.apply(ParDo.of(new CalcLineLength()));
 
-    dummyrecords.apply("Write to AlloyDB", ParDo.of(new WriteToAlloyDB()));
+    // step 5 of X : execute the pipeline
+    pipeline.run().waitUntilFinish();
 
 
   }

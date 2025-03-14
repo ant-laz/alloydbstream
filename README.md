@@ -54,48 +54,6 @@ execute the bash script, created by terraform, to make some env vars
 source scripts/00_set_variables.sh
 ```
 
-### Initialize the database using Cloud Shell
-
-get the IP address of the AlloyDB instance you want to connect to
-
-```shell
-gcloud alloydb instances describe ${ADB_INSTANCE_ID} \
- --region=${ADB_LOCATION} \
- --cluster=${ADB_CLUSTER_ID} \
- --project=${GCP_PROJECT_ID}
-```
-
-connect from cloud shell
-```shell
-psql -h IP_ADDRESS -U USERNAME
-```
-
-create a database
-```shell
-CREATE DATABASE automation;
-```
-
-create a table
-```shell
-CREATE TABLE sensors (measurement INTEGER,
-                      state VARCHAR(255),
-                      sensorID SERIAL PRIMARY KEY);
-```
-
-add some initial entries
-```shell
-INSERT INTO sensors (state, measurement) values ('ACTIVE', 123);
-INSERT INTO sensors (state, measurement) values ('ACTIVE', 456);
-```
-
-
-### Build the Java project
-
-build the project
-```shell
-./gradlew build
-```
-
 ### Launch the pipeline onto Dataflow
 
 execute the bash script, which uses env vars, to launch the dataflow job
