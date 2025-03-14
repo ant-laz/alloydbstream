@@ -17,7 +17,6 @@
 // to avoid repeating the same values or expr multiple times in this config
 //
 locals {
-  dataflow_service_account = "alloydbstream-sa"
   repo_codename = "alloydbstream"
   max_dataflow_workers     = 1
   worker_disk_size_gb      = 200
@@ -104,36 +103,40 @@ module "vpc_network" {
   ]
 }
 
+// Google Cloud VPC Firewall
+// https://cloud.google.com/firewall/docs/about-firewalls
 // https://cloud.google.com/dataflow/docs/guides/routes-firewall
-// The ingress firewall rule permits Dataflow VMs to receive packets from each other
-// The egress firewall rule permits Dataflow VMs to send packets to each other
-
-# module "firewall_rules" {
-#   // Default rules for internal traffic + SSH access via IAP
-#   source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-vpc-firewall?ref=v38.0.0"
-#   project_id = module.google_cloud_project.project_id
-#   network    = module.vpc_network.name
-#   default_rules_config = {
-#     admin_ranges = [
-#       module.vpc_network.subnet_ips["${var.region}/${var.network_prefix}-subnet"],
-#     ]
-#   }
-#   egress_rules = {
-#     allow-egress-dataflow = {
-#       deny        = false
-#       description = "Dataflow firewall rule egress"
-#       targets     = ["dataflow"]
-#       rules       = [{ protocol = "tcp", ports = [12345, 12346] }]
-#     }
-#   }
-#   ingress_rules = {
-#     allow-ingress-dataflow = {
-#       description = "Dataflow firewall rule ingress"
-#       targets     = ["dataflow"]
-#       rules       = [{ protocol = "tcp", ports = [12345, 12346] }]
-#     }
-#   }
-# }
+// https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/tree/master/modules/net-vpc-firewall
+// >> Ingress rule permits Dataflow VMs to receive packets from each other
+// >> Egress rule permits Dataflow VMs to send packets to each other
+// >> streaming : Dataflow VMs  send/receive network traffic on TCP port 12345
+// >> batch : Dataflow VMs send/receive network traffic on TCP port 12346
+module "firewall_rules" {
+  // Default rules for internal traffic + SSH access via IAP
+  source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-vpc-firewall?ref=v38.0.0"
+  project_id = module.google_cloud_project.project_id
+  network    = module.vpc_network.name
+  default_rules_config = {
+    admin_ranges = [
+      module.vpc_network.subnet_ips["${var.region}/${var.network_prefix}-subnet"],
+    ]
+  }
+  egress_rules = {
+    allow-egress-dataflow = {
+      deny        = false
+      description = "Dataflow firewall rule egress"
+      targets     = ["dataflow"]
+      rules       = [{ protocol = "tcp", ports = [12345, 12346] }]
+    }
+  }
+  ingress_rules = {
+    allow-ingress-dataflow = {
+      description = "Dataflow firewall rule ingress"
+      targets     = ["dataflow"]
+      rules       = [{ protocol = "tcp", ports = [12345, 12346] }]
+    }
+  }
+}
 
 
 
