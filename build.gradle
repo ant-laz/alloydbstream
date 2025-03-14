@@ -22,7 +22,19 @@ dependencies {
     implementation "org.apache.beam:beam-runners-google-cloud-dataflow-java:2.59.0"
     implementation "org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.59.0"
     implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
-    implementation "org.slf4j:slf4j-jdk14:1.7.32"
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14
+    implementation "org.slf4j:slf4j-jdk14:1.7.36"
+
+    //for JdbcIO
+    // https://mvnrepository.com/artifact/org.apache.beam/beam-sdks-java-io-jdbc
+    implementation 'org.apache.beam:beam-sdks-java-io-jdbc:2.59.0'
+    // https://mvnrepository.com/artifact/com.google.cloud/alloydb-jdbc-connector
+    implementation group: 'com.google.cloud', name: 'alloydb-jdbc-connector', version: '1.2.1'
+    // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
+    // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '6.2.1'
+
 
     // Tests dependencies.
     testImplementation "junit:junit:4.13.2"

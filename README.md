@@ -63,6 +63,8 @@ From there execute the following to create a database
 CREATE DATABASE automation;
 ```
 
+In AlloyDB switch to the newly created `automation` database.
+
 And a table
 ```shell
 CREATE TABLE sensors (measurement INTEGER,
@@ -74,6 +76,18 @@ And initialize the table with some dummy rows
 ```shell
 INSERT INTO sensors (state, measurement) values ('ACTIVE', 123);
 INSERT INTO sensors (state, measurement) values ('ACTIVE', 456);
+```
+
+And another table
+```shell
+CREATE TABLE messages (message VARCHAR(255),
+                      messageID SERIAL PRIMARY KEY);
+```
+
+And initialize the table with some dummy rows
+```shell
+INSERT INTO messages (message) values ('TEST_MSG_1');
+INSERT INTO messages (message) values ('TEST_MSG_2');
 ```
 
 ### Launch the pipeline onto Dataflow
