@@ -69,24 +69,44 @@ module "dataflow_sa" {
   }
 }
 
-// Network
-# module "vpc_network" {
-#   source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-vpc?ref=v38.0.0"
-#   project_id = module.google_cloud_project.project_id
-#   name       = "${var.network_prefix}-net"
-#   subnets = [
-#     {
-#       ip_cidr_range         = "10.1.0.0/16"
-#       name                  = "${var.network_prefix}-subnet"
-#       region                = var.region
-#       enable_private_access = true
-#       secondary_ip_ranges = {
-#         pods     = "10.16.0.0/14"
-#         services = "10.20.0.0/24"
-#       }
-#     }
-#   ]
-# }
+// Google Virtual Private Cloud (VPC) Network
+// https://cloud.google.com/vpc/docs/vpc
+// https://cloud.google.com/dataflow/docs/guides/specifying-networks
+// https://cloud.google.com/vpc/docs/private-google-access
+// https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/tree/master/modules/net-vpc
+// [subnet.region]
+// >> Subnets are regional resources.
+// >> Subnetwork region must equal the zone where you run your Dataflow workers.
+// [subnet.ip_cidr_range]
+// >> #num of available IP addresses is a limit on the #num of Dataflow workers
+// >> Google Cloud uses 1st 2 & last 2 IPv4 addr in subnet primary IPv4 addr
+// >> IF ip_cidr_range = "10.0.0.0/24" THEN 252 ip addresses & #num workers
+// >> IF ip_cidr_range = "10.1.0.0/16" THEN 65532 ip addresses & #num workers
+// [enable_private_access]
+// >> This is to do with Private Google Access
+// >> VM instances that only have internal IP addresses (no external IP addr)
+// >> can use Private Google Access tp reach IP addr of Google APIs and services
+module "vpc_network" {
+  source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-vpc?ref=v38.0.0"
+  project_id = module.google_cloud_project.project_id
+  name       = "${var.network_prefix}-net"
+  subnets = [
+    {
+      ip_cidr_range         = "10.1.0.0/16"
+      name                  = "${var.network_prefix}-subnet"
+      region                = var.region
+      enable_private_access = true
+      secondary_ip_ranges = {
+        pods     = "10.16.0.0/14"
+        services = "10.20.0.0/24"
+      }
+    }
+  ]
+}
+
+// https://cloud.google.com/dataflow/docs/guides/routes-firewall
+// The ingress firewall rule permits Dataflow VMs to receive packets from each other
+// The egress firewall rule permits Dataflow VMs to send packets to each other
 
 # module "firewall_rules" {
 #   // Default rules for internal traffic + SSH access via IAP
@@ -115,14 +135,7 @@ module "dataflow_sa" {
 #   }
 # }
 
-# module "regional_nat" {
-#   // So we can get to Internet if necessary (from the Dataflow region)
-#   source         = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-cloudnat?ref=v38.0.0"
-#   project_id     = module.google_cloud_project.project_id
-#   region         = var.region
-#   name           = "${var.network_prefix}-nat"
-#   router_network = module.vpc_network.self_link
-# }
+
 
 # resource "local_file" "variables_script" {
 #   filename        = "${path.module}/../../pipelines/ml_ai_python/scripts/00_set_variables.sh"
