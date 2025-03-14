@@ -54,6 +54,28 @@ execute the bash script, created by terraform, to make some env vars
 source scripts/00_set_variables.sh
 ```
 
+### In the Terraform created AlloyDB Instance create a Database
+
+Use AlloyDB studio to login to the default `postgres` database in the cluster
+
+From there execute the following to create a database
+```shell
+CREATE DATABASE automation;
+```
+
+And a table
+```shell
+CREATE TABLE sensors (measurement INTEGER,
+                      state VARCHAR(255),
+                      sensorID SERIAL PRIMARY KEY);
+```
+
+And initialize the table with some dummy rows
+```shell
+INSERT INTO sensors (state, measurement) values ('ACTIVE', 123);
+INSERT INTO sensors (state, measurement) values ('ACTIVE', 456);
+```
+
 ### Launch the pipeline onto Dataflow
 
 execute the bash script, which uses env vars, to launch the dataflow job

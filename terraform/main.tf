@@ -97,6 +97,7 @@ module "dataflow_sa" {
 // >> 1. Allocate an IP address range (CIDR block) in your VPC network
 // >>    This range will not be accessible to subnets
 // >> 2. Create a private connection to a service producer (ALloyDB)
+// >> the Terraform snippet "psa_config" takes care of #1 & #2 above
 module "vpc_network" {
   source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-vpc?ref=v38.0.0"
   project_id = module.google_cloud_project.project_id
