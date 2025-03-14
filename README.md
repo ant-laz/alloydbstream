@@ -1,16 +1,76 @@
-## Sink - AlloyDB for PostgreSQL
+## What problem is being addressed here?
 
-create environment variables
+Streaming data from Kafka to AlloyDB for PostgreSQL using Dataflow.
 
+This is a hard problem for the following reasons:
+ * There are no Google published templates to do this in Java or Python.
+ * Apache Beam JdbcIO lacks documentation around constructing URLs for AlloyDB
+ * Connectivity bewteen Dataflow workers & AlloyDB is non-trivial to setup
+ * There are many configuration settings to tweak to achieve a high throughput
+ * UPSERTS into AlloyDB, with a high throughput, is not straightforward.
+
+## How to execute this solution.
+
+### Set up an environment on Google CLoud using Terraform
+
+Life is short, so let's use Terraform to first set up an env on Google Cloud.
+
+Change the working directory to the terraform folder
 ```shell
-source my_config/create_env_vars.sh
+cd terraform
 ```
 
-create a cluster & primary instance by following this guide:
+Create a file named terraform.tfvars 
+```shell
+touch terraform.tfvars
+```
 
-https://cloud.google.com/alloydb/docs/quickstart/create-and-connect#gcloud
+Add the following configuration variables to the file, with your own values.
+```shell
+billing_account = "YOUR_BILLING_ACCOUNT"
+organization = "YOUR_ORGANIZATION_ID"
+project_create = true/false
+project_id = "YOUR_PROJECT_ID"
+region = "YOUR_REGION"
+```
 
-create a database 
+Run the following command to initialize Terraform:
+```shell
+terraform init
+```
+
+Run the following command to apply the Terraform configuration.
+```shell
+terraform apply
+```
+
+navigate up to the root of the repository
+```shell
+cd ..
+```
+
+execute the bash script, created by terraform, to make some env vars
+```shell
+source scripts/00_set_variables.sh
+```
+
+### Initialize the database using Cloud Shell
+
+get the IP address of the AlloyDB instance you want to connect to
+
+```shell
+gcloud alloydb instances describe ${ADB_INSTANCE_ID} \
+ --region=${ADB_LOCATION} \
+ --cluster=${ADB_CLUSTER_ID} \
+ --project=${GCP_PROJECT_ID}
+```
+
+connect from cloud shell
+```shell
+psql -h IP_ADDRESS -U USERNAME
+```
+
+create a database
 ```shell
 CREATE DATABASE automation;
 ```
@@ -28,74 +88,18 @@ INSERT INTO sensors (state, measurement) values ('ACTIVE', 123);
 INSERT INTO sensors (state, measurement) values ('ACTIVE', 456);
 ```
 
-query the table
+
+### Build the Java project
+
+build the project
 ```shell
-SELECT
-  sensorid,
-  state,
-  measurement
-FROM
-  sensors;
+./gradlew build
 ```
 
-| sensorid | state  | measurement |
-|----------|--------|-------------|
-| 1        | ACTIVE | 123         |
-| 2        | ACTIVE | 456         |
+### Launch the pipeline onto Dataflow
 
-manually execute an upsert
+execute the bash script, which uses env vars, to launch the dataflow job
 ```shell
- INSERT INTO sensors (sensorid, state, measurement) 
- VALUES (1, 'ERROR', 789) 
- ON CONFLICT (sensorid) 
- DO UPDATE SET state = EXCLUDED.state, measurement = EXCLUDED.measurement;
-```
-
-query the table again
-```shell
-SELECT
-  sensorid,
-  state,
-  measurement
-FROM
-  sensors;
-```
-
-| sensorid | state  | measurement |
-|----------|--------|-------------|
-| 1        | ERROR  | 789         |
-| 2        | ACTIVE | 456         |
-
-
-
-## Dataflow pipeline
-
-create environment variables
-
-```shell
-source my_config/create_env_vars.sh
-```
-
-navigate to Apache Beam IO
-
-https://beam.apache.org/documentation/io/connectors/
-
-find latest docs for JdbcIO
-
-https://beam.apache.org/releases/javadoc/current/org/apache/beam/sdk/io/jdbc/JdbcIO.html
-
-launch dataflow pipeline
-
-```shell
-./gradlew run --args="\
---runner='DataflowRunner' \
---project=${GCP_PROJECT_ID} \
---serviceAccount=${SERVICE_ACCT} \
---region=${GCP_DATAFLOW_REGION} \
---tempLocation=${GCS_BUCKET_TMP} \
---network=${NETWORK_NAME} \
---subnetwork=${SUBNETWORK_NAME} \
---usePublicIps=${PUBLICIP_FLAG} \
---targetDatabase${}
+./scripts/01_launch_pipeline.sh
 ```
 
