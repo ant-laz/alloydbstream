@@ -39,6 +39,8 @@ module "google_cloud_project" {
     "serviceusage.googleapis.com",
     "dataflow.googleapis.com",
     "monitoring.googleapis.com",
+    "alloydb.googleapis.com",
+
   ]
 }
 
