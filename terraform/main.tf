@@ -37,6 +37,7 @@ module "google_cloud_project" {
   parent          = var.organization
   services = [
     "serviceusage.googleapis.com",
+    "servicenetworking.googleapis.com",  //for Private Service Access
     "dataflow.googleapis.com",
     "monitoring.googleapis.com",
     "alloydb.googleapis.com",
@@ -88,10 +89,21 @@ module "dataflow_sa" {
 // >> This is to do with Private Google Access
 // >> VM instances that only have internal IP addresses (no external IP addr)
 // >> can use Private Google Access tp reach IP addr of Google APIs and services
+// [psa_configs]
+// >> The Private Service Access configuration.
+// >> https://cloud.google.com/vpc/docs/configure-private-services-access
+// >> Service Producer = AlloyDB
+// >> Steps to set up :
+// >> 1. Allocate an IP address range (CIDR block) in your VPC network
+// >>    This range will not be accessible to subnets
+// >> 2. Create a private connection to a service producer (ALloyDB)
 module "vpc_network" {
   source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-vpc?ref=v38.0.0"
   project_id = module.google_cloud_project.project_id
   name       = "${var.network_prefix}-net"
+  psa_configs = [{
+    ranges = { alloydb = "10.60.0.0/16" }
+  }]
   subnets = [
     {
       ip_cidr_range         = "10.1.0.0/16"
@@ -137,6 +149,22 @@ module "firewall_rules" {
       description = "Dataflow firewall rule ingress"
       targets     = ["dataflow"]
       rules       = [{ protocol = "tcp", ports = [12345, 12346] }]
+    }
+  }
+}
+
+// Google Cloud AlloyDB for Postgres
+// https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/tree/master/modules/alloydb
+// https://cloud.google.com/alloydb/docs/about-private-services-access
+module "alloydb" {
+  source        = "github.com/GoogleCloudPlatform/cloud-foundation-fabric.git//modules/alloydb?ref=master"
+  project_id    = module.google_cloud_project.project_id
+  cluster_name  = "${local.repo_codename}-cluster"
+  location      = var.region
+  instance_name = "${local.repo_codename}-instance"
+  network_config = {
+    psa_config = {
+      network = module.vpc_network.id
     }
   }
 }
