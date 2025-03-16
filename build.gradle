@@ -16,29 +16,80 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    // gradle extra properties block
+    // https://docs.gradle.org/current/userguide/writing_build_scripts.html#sec:extra_properties
+    beamVersion = "2.63.0"
+    slf4jVersion = "2.0.16"
+}
+
 dependencies {
-    implementation "org.apache.beam:beam-sdks-java-core:2.59.0"
-    implementation "org.apache.beam:beam-runners-direct-java:2.59.0"
-    implementation "org.apache.beam:beam-runners-google-cloud-dataflow-java:2.59.0"
-    implementation "org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.59.0"
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14
-    implementation "org.slf4j:slf4j-jdk14:1.7.36"
+    // ----------- Inspecting contents of Apache Beam BOM ---------------------
+    // 1. Apache Beam has many dependencies, view them via a link like:
+    //    https://raw.githubusercontent.com/apache/beam/v2.63.0/buildSrc/src/main/groovy/org/apache/beam/gradle/BeamModulePlugin.groovy
 
-    //for JdbcIO
-    // https://mvnrepository.com/artifact/org.apache.beam/beam-sdks-java-io-jdbc
-    implementation 'org.apache.beam:beam-sdks-java-io-jdbc:2.59.0'
-    // https://mvnrepository.com/artifact/com.google.cloud/alloydb-jdbc-connector
-    implementation group: 'com.google.cloud', name: 'alloydb-jdbc-connector', version: '1.2.1'
+    // ----------- Importing Apache Beam BOM ----------------------------------
+    // 2. When you import Apache Beam, using a Bill of Material (BOM
+    //    artifact is recommended. When a project import contains unspecified
+    //    or ambiguous dependencies, the BOM provides the information that
+    //    the SDK needs to use the correct dependency version.
+    //    https://cloud.google.com/dataflow/docs/guides/manage-dependencies#java-management
+    //    https://beam.apache.org/documentation/sdks/java-dependencies/
+    implementation(platform("org.apache.beam:beam-sdks-java-google-cloud-platform-bom:${beamVersion}"))
+
+    // ---- Importing org.apache.beam, io.grpc, com.google.cloud dependencies --
+    // 3. After you import the BOM, you can remove specific version pinning
+    //    from your dependencies. For example, you can remove the versions
+    //    associated with org.apache.beam, io.grpc, and com.google.cloud,
+    //    including libraries-bom.
+    //    Because the dependencies aren’t automatically imported by the BOM,
+    //    don’t remove them entirely. Keep dependencies with no version
+
+    // The beam-sdks-java-core artifact contains only the core SDK.
+    // You need to explicitly add other dependencies, such as I/O and runners,
+    // to the dependency list.
+
+    // The Apache Beam SDK for Java implements the required logging
+    // infrastructure so that your Java code only needs to import the SLF4J API.
+    // Then, it instantiates a Logger to enable message logging within your
+    // pipeline code.
+    // https://cloud.google.com/dataflow/docs/guides/logging
+    implementation("org.apache.beam:beam-sdks-java-core")
+    // TODO: work out why I need to include this with version number given BOM
+    implementation("org.slf4j:slf4j-jdk14:${slf4jVersion}")
+
+    // The Apache Beam direct runner
+    // https://beam.apache.org/documentation/runners/direct/
+    implementation("org.apache.beam:beam-runners-direct-java")
+
+    // The Cloud Dataflow runner
+    // https://beam.apache.org/documentation/runners/dataflow/
+    implementation("org.apache.beam:beam-runners-google-cloud-dataflow-java")
+
+    // The Apache Beam JdbcIO
+    // https://beam.apache.org/releases/javadoc/current/index.html?org/apache/beam/sdk/io/jdbc/JdbcIO.html
+    implementation("org.apache.beam:beam-sdks-java-io-jdbc")
+
+    // TODO: workout if this include JdbcIO above & can be removed
+    implementation("org.apache.beam:beam-sdks-java-io-google-cloud-platform")
+
+    // ---- Importing other dependencies -------------------------------------
+    // AlloyDB JDBC connector
+    // To set up the AlloyDB Java Language connector
+    // https://cloud.google.com/alloydb/docs/connect-language-connectors
+    // TODO work out why this is not included in BOM as it google.cloud
+    implementation("com.google.cloud:alloydb-jdbc-connector:1.2.1")
+
+    // Postgres, to set up the AlloyDB Java Language connector
+    // https://cloud.google.com/alloydb/docs/connect-language-connectors
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
+    implementation("org.postgresql:postgresql:42.7.5")
+
+    // HikariCP, to set up AlloyDB Java Language connector
+    // https://cloud.google.com/alloydb/docs/connect-language-connectors
     // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
-    implementation group: 'com.zaxxer', name: 'HikariCP', version: '6.2.1'
+    implementation("com.zaxxer:HikariCP:6.2.1")
 
-
-    // Tests dependencies.
-    testImplementation "junit:junit:4.13.2"
-    testImplementation 'org.hamcrest:hamcrest:2.2'
 }
 
 // Package a self-contained jar file.
