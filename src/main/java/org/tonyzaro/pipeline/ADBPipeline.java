@@ -75,25 +75,31 @@ public class ADBPipeline {
   private static class MyDataSourceProviderFn implements SerializableFunction<Void, DataSource> {
 
     private static transient DataSource dataSource;
-    private String jdbcUrl;
     private String username;
     private String password;
+    private String database;
+    private String instance;
 
-    public MyDataSourceProviderFn(String jdbcUrl, String username, String password) {
-      this.jdbcUrl = jdbcUrl;
+    public MyDataSourceProviderFn(String username, String password, String database, String instance) {
       this.username = username;
       this.password = password;
+      this.database = database;
+      this.instance = instance;
     }
 
-    private static DataSource getDataSource(String jdbcUrl, String username, String password) {
+    private static DataSource getDataSource(String username, String password, String database, String instance) {
 
       if (dataSource == null) {
         // if we already have a data source then return it
         // otherwise let's create one
+        //https://cloud.google.com/alloydb/docs/connect-language-connectors
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrl);
+        config.setJdbcUrl(String.format("jdbc:postgresql:///%s", database));
         config.setUsername(username);
         config.setPassword(password);
+        config.addDataSourceProperty("socketFactory", "com.google.cloud.alloydb.SocketFactory");
+        config.addDataSourceProperty("alloydbInstanceName", instance);
+        config.addDataSourceProperty("alloydbIpType", "PRIVATE"); //PSA
         config.setMaximumPoolSize(10);  //TODO: work out how many connections are needed in pool
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
@@ -105,7 +111,7 @@ public class ADBPipeline {
 
     @Override
     public synchronized DataSource apply(Void input) {
-      return getDataSource(this.jdbcUrl, this.username, this.password);
+      return getDataSource(this.username, this.password, this.database, this.instance);
     }
   }
 
@@ -138,6 +144,7 @@ public class ADBPipeline {
         JdbcIO.<String>write()  //TODO : add command line args for these inputs
         .withDataSourceProviderFn(
             new MyDataSourceProviderFn(
+                "",
                 "",
                 "",
                 ""))
