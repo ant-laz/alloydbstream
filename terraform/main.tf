@@ -41,7 +41,7 @@ module "google_cloud_project" {
     "dataflow.googleapis.com",
     "monitoring.googleapis.com",
     "alloydb.googleapis.com",
-
+    "managedkafka.googleapis.com",
   ]
 }
 
@@ -171,6 +171,36 @@ module "alloydb" {
     }
   }
 }
+
+// Google Cloud Managed Service for Apache Kafka
+// Kafka Cluster
+resource "google_managed_kafka_cluster" "alloydbstream_kafka_cluster" {
+  project    = module.google_cloud_project.project_id
+  cluster_id = "${local.repo_codename}-kafka-cluster"
+  location   = var.region
+  capacity_config {
+    vcpu_count   = 3
+    memory_bytes = 3221225472
+  }
+  gcp_config {
+    access_config {
+      network_configs {
+        subnet = module.vpc_network.subnet_ids["${var.region}/${var.network_prefix}-subnet"]
+      }
+    }
+  }
+}
+
+// Google Cloud Managed Service for Apache Kafka
+// Kafka Topic
+# resource "google_managed_kafka_topic" "alloydbstream_kafka_topic" {
+#   project            = data.google_project.default.project_id # Replace this with your project ID in quotes
+#   topic_id           = "my-topic-id"
+#   cluster            = google_managed_kafka_cluster.default.cluster_id
+#   location           = "us-central1"
+#   partition_count    = 2
+#   replication_factor = 3
+# }
 
 
 // https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file
