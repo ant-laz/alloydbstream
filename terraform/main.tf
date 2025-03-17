@@ -67,7 +67,9 @@ module "dataflow_sa" {
       "roles/storage.admin",
       "roles/dataflow.worker",
       "roles/dataflow.admin",
-      "roles/storage.objectAdmin"
+      "roles/storage.objectAdmin",
+      "roles/alloydb.client", //to write to AlloyDB
+      "roles/serviceusage.serviceUsageConsumer" //to write to AlloyDB
     ]
   }
 }
