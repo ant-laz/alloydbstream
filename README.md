@@ -32,6 +32,9 @@ organization = "YOUR_ORGANIZATION_ID"
 project_create = true/false
 project_id = "YOUR_PROJECT_ID"
 region = "YOUR_REGION"
+database = "NAME_OF_YOUR_ALLOYDB_DATABASE"
+user = "USER_ON_YOUR_ALLOYDB_DATABASE"
+password = "USER_PASSWORD_ON_YOUR_ALLOYDB_DATABASE"
 ```
 
 Run the following command to initialize Terraform:

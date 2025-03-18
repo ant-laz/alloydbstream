@@ -50,3 +50,18 @@ variable "region" {
   description = "The region for resources and networking"
   type        = string
 }
+
+variable "database" {
+  description = "The name of the AlloyDB Database"
+  type        = string
+}
+
+variable "user" {
+  description = "The name of the user on the AlloyDB database"
+  type        = string
+}
+
+variable "password" {
+  description = "The password of the user on the AlloyDB database"
+  type        = string
+}

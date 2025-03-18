@@ -49,10 +49,30 @@ public class ADBPipeline {
   // ---------   COMMAND LINE OPTIONS --------------------------------------------------------------
   // For custom command line options
   public interface MyPipelineOptions extends PipelineOptions {
-    @Description("AlloyDB Database --targetDatabase=")
-    @Default.String("my-database")
-    String getDatabase();
-    void setDatabase(String value);
+
+    //    @Description("GSECOPS_CUSTOMER_ID --secOpsCustomerID=")
+    //     @Default.String("asdf")
+    //     String getSecOpsCustomerID();
+    //     void setSecOpsCustomerID(String value);
+    @Description("AlloyDB Database --alloydbDatabase=")
+    @Default.String("mydatabasename")
+    String getAlloydbDatabase();
+    void setAlloydbDatabase(String value);
+
+    @Description("AlloyDB User --alloydbUser=")
+    @Default.String("myusername")
+    String getAlloydbUser();
+    void setAlloydbUser(String value);
+
+    @Description("AlloyDB Password --alloydbPassword=")
+    @Default.String("mypassword")
+    String getAlloydbPassword();
+    void setAlloydbPassword(String value);
+
+    @Description("AlloyDB Instance --alloydbInstance=")
+    @Default.String("projects/prj/locations/europe-west2/clusters/clustername/instances/myinstance")
+    String getAlloydbInstance();
+    void setAlloydbInstance(String value);
   }
 
   // ---------   DoFn ------------------------------------------------------------------------------
@@ -144,10 +164,10 @@ public class ADBPipeline {
         JdbcIO.<String>write()  //TODO : add command line args for these inputs
         .withDataSourceProviderFn(
             new MyDataSourceProviderFn(
-                "",
-                "",
-                "",
-                ""))
+                myOptions.getAlloydbUser(),
+                myOptions.getAlloydbPassword(),
+                myOptions.getAlloydbDatabase(),
+                myOptions.getAlloydbInstance()))
             .withStatement("INSERT INTO messages (message) values (?)")
             .withPreparedStatementSetter(new PreparedStatementSetter<String>() {
               @Override

@@ -20,7 +20,7 @@ locals {
   repo_codename = "alloydbstream"
   max_dataflow_workers     = 1
   worker_disk_size_gb      = 200
-  machine_type             = "g2-standard-4"
+  machine_type             = "n2-standard-4"
   dataflow_vm_public_ip    = false
 }
 
@@ -221,6 +221,11 @@ export SUBNETWORK=regions/${var.region}/subnetworks/${var.network_prefix}-subnet
 export TEMP_LOCATION=gs://${module.buckets.name}/tmp
 export SERVICE_ACCOUNT=${module.dataflow_sa.email}
 export DATAFLOW_VM_PUBLIC_IP=${local.dataflow_vm_public_ip}
+
+export ALLOYDB_DB_NAME=${var.database}
+export ALLOYDB_DB_USER=${var.user}
+export ALLOYDB_DB_PASSWORD=${var.password}
+export ALLOYDB_DB_INSTANCE=${module.alloydb.id}
 
 export MAX_DATAFLOW_WORKERS=${local.max_dataflow_workers}
 export DISK_SIZE_GB=${local.worker_disk_size_gb}
